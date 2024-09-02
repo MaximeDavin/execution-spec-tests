@@ -12,11 +12,23 @@ from ethereum_test_vm import EVMCodeType
 class Features(Flag):
     """
     Enumerates the available features.
+
+    Each feature can be passed to the parameter flag `--feature` as a lower case string,
+    and multiple features can be enabled by repeating the flag.
     """
 
     NONE = 0
     EIP_7702 = auto()
+    """
+    Enables tests to be filled and executed in EIP-7702 mode, i.e. addresses returned by
+    `pre.deploy_contract` is not the contract itself but an EOA account that delegates
+    to the contract.
+    """
     EOF_V1 = auto()
+    """
+    Enables tests to be filled and executed in EOF V1 mode, i.e. all test contracts deployed during
+    tests are automatically wrapped in an EOF V1 container.
+    """
 
     def __str__(self):
         """

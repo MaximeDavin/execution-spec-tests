@@ -1,5 +1,5 @@
 """
-Pytest plug-in to enable feature-based modification during test filling/execution.
+Pytest plugin to enable feature-based modification during test filling/execution.
 """
 
 from .features import Features
