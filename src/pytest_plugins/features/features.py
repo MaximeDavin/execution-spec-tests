@@ -51,7 +51,6 @@ def pytest_addoption(parser: pytest.Parser):
         default=[],
         help="Enable a feature (may be specified multiple times, once per feature). "
         "Supported features: " + ", ".join(str(feature).lower() for feature in Features),
-        + ", ".join(str(feature).lower() for feature in Features),
     )
 
 
