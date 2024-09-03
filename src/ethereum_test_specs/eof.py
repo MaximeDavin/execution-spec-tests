@@ -19,7 +19,8 @@ from ethereum_test_fixtures import BaseFixture, FixtureFormats
 from ethereum_test_fixtures.eof import Fixture, Result, Vector
 from ethereum_test_forks import Fork
 from ethereum_test_types import Alloc, Environment, Transaction
-from ethereum_test_types.eof.v1 import Container, ContainerKind
+from ethereum_test_types.eof.v1 import Container, ContainerKind, Section
+from ethereum_test_vm import Opcodes as Op
 from evm_transition_tool import TransitionTool
 
 from .base import BaseTest
@@ -139,12 +140,16 @@ class EOFTest(BaseTest):
     Filler type that tests EOF containers.
     """
 
-    data: Bytes
+    data: Container
     expect_exception: EOFExceptionInstanceOrList | None = None
     container_kind: ContainerKind | None = None
+    pre: Alloc | None = None
 
     supported_fixture_formats: ClassVar[List[FixtureFormats]] = [
         FixtureFormats.EOF_TEST,
+        FixtureFormats.STATE_TEST,
+        FixtureFormats.BLOCKCHAIN_TEST,
+        FixtureFormats.BLOCKCHAIN_TEST_ENGINE,
     ]
 
     @model_validator(mode="before")
@@ -196,11 +201,12 @@ class EOFTest(BaseTest):
         """
         Generate the EOF test fixture.
         """
-        if self.data in existing_tests:
+        if Bytes(self.data) in existing_tests:
             pytest.fail(
-                f"Duplicate EOF test: {self.data}, existing test: {existing_tests[self.data]}"
+                f"Duplicate EOF test: {self.data}, "
+                f"existing test: {existing_tests[Bytes(self.data)]}"
             )
-        existing_tests[self.data] = request.node.nodeid
+        existing_tests[Bytes(self.data)] = request.node.nodeid
         vectors = [
             Vector(
                 code=self.data,
@@ -231,6 +237,57 @@ class EOFTest(BaseTest):
             self.verify_result(result, expected_result, vector.code)
 
         return fixture
+
+    def generate_state_test(self) -> StateTest:
+        """
+        Generate the StateTest filler using a contract creation transaction to validate EOF code.
+        """
+        assert self.pre is not None, "pre must be set to generate a StateTest."
+        init_container: Container
+        expected_code: Container
+        if ContainerKind.INITCODE in [self.container_kind, self.data.kind]:
+            expected_code = Container(
+                sections=[
+                    Section.Code(Op.EOFCREATE[0](0, 0, 0, 0) + Op.POP + Op.STOP),
+                    Section.Container(self.data),
+                ]
+            )
+            init_container = Container.Init(
+                deploy_container=expected_code,
+            )
+        else:
+            init_container = Container.Init(
+                deploy_container=self.data,
+            )
+            expected_code = self.data
+
+        gas_limit = self.data.deployment_gas
+        if gas_limit is None:
+            gas_limit = 10_000_000
+
+        tx = Transaction(
+            sender=self.pre.fund_eoa(),
+            gas_limit=gas_limit,
+            to=None,
+            data=init_container,
+        )
+        post = Alloc()
+        if self.expect_exception is not None:
+            post[tx.created_contract] = None  # Expect failure.
+        else:
+            post[tx.created_contract] = Account(
+                nonce=1,
+                code=expected_code,
+            )
+        return StateTest(
+            pre=self.pre,
+            tx=tx,
+            env=Environment(
+                gas_limit=gas_limit,
+            ),
+            post=post,
+            t8n_dump_dir=self.t8n_dump_dir,
+        )
 
     def verify_result(self, result: CompletedProcess, expected_result: Result, code: Bytes):
         """
@@ -280,6 +337,14 @@ class EOFTest(BaseTest):
         """
         if fixture_format == FixtureFormats.EOF_TEST:
             return self.make_eof_test_fixture(request=request, fork=fork, eips=eips)
+        elif fixture_format in (
+            FixtureFormats.STATE_TEST,
+            FixtureFormats.BLOCKCHAIN_TEST,
+            FixtureFormats.BLOCKCHAIN_TEST_ENGINE,
+        ):
+            return self.generate_state_test().generate(
+                request=request, t8n=t8n, fork=fork, fixture_format=fixture_format, eips=eips
+            )
 
         raise Exception(f"Unknown fixture format: {fixture_format}")
 
@@ -347,11 +412,15 @@ class EOFStateTest(EOFTest):
         post = Alloc()
         if self.expect_exception is not None:  # Invalid EOF
             tx.to = None  # Make EIP-7698 create transaction
-            tx.data = Bytes(self.data + self.tx_data)  # by concatenating container and tx data.
+            tx.data = Bytes(
+                bytes(self.data) + self.tx_data
+            )  # by concatenating container and tx data.
             post[tx.created_contract] = None  # Expect failure.
         elif self.deploy_tx:
             tx.to = None  # Make EIP-7698 create transaction
-            tx.data = Bytes(self.data + self.tx_data)  # by concatenating container and tx data.
+            tx.data = Bytes(
+                bytes(self.data) + self.tx_data
+            )  # by concatenating container and tx data.
             post[tx.created_contract] = self.container_post  # Successful.
         else:
             tx.to = self.pre.deploy_contract(code=self.data)

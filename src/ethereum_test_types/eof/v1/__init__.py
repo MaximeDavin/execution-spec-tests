@@ -390,6 +390,7 @@ class Container(CopyValidateModel):
     Optional raw bytes of the expected constructed bytecode.
     This allows confirming that raw EOF and Container() representations are identical.
     """
+    deployment_gas: Optional[int] = None
 
     @cached_property
     def bytecode(self) -> bytes:
