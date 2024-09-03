@@ -79,7 +79,7 @@ class AllocMode(IntEnum):
     STRICT = 1
 
 
-SET_CODE_DELEGATION_DESIGNATION = b"\xef\x01\x00"
+SET_CODE_DELEGATION_DESIGNATION = bytes.fromhex("ef0100")
 
 
 class Alloc(BaseAlloc):

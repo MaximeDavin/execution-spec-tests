@@ -13,7 +13,7 @@ class Features(Flag):
     """
     Enumerates the available features.
 
-    Each feature can be passed to the parameter flag `--feature` as a lower case string,
+    Each feature can be passed to the parameter flag `--feature` as a (case-insensitive) string,
     and multiple features can be enabled by repeating the flag.
     """
 
@@ -49,7 +49,8 @@ def pytest_addoption(parser: pytest.Parser):
         "--feature",
         action="append",
         default=[],
-        help="Enable a feature (repeat for multiple features). Supported features: "
+        help="Enable a feature (may be specified multiple times, once per feature). "
+        "Supported features: " + ", ".join(str(feature).lower() for feature in Features),
         + ", ".join(str(feature).lower() for feature in Features),
     )
 
