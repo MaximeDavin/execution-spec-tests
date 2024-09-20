@@ -19,8 +19,7 @@ from ethereum_test_fixtures import BaseFixture, FixtureFormats
 from ethereum_test_fixtures.eof import Fixture, Result, Vector
 from ethereum_test_forks import Fork
 from ethereum_test_types import Alloc, Environment, Transaction
-from ethereum_test_types.eof.v1 import Container, ContainerKind, Section
-from ethereum_test_vm import Opcodes as Op
+from ethereum_test_types.eof.v1 import Container, ContainerKind, SectionKind
 from evm_transition_tool import TransitionTool
 
 from .base import BaseTest
@@ -244,22 +243,28 @@ class EOFTest(BaseTest):
         """
         assert self.pre is not None, "pre must be set to generate a StateTest."
         init_container: Container
-        expected_code: Container
+        expected_code: Container | Bytes | None = None
         if ContainerKind.INITCODE in [self.container_kind, self.data.kind]:
-            expected_code = Container(
-                sections=[
-                    Section.Code(Op.EOFCREATE[0](0, 0, 0, 0) + Op.POP + Op.STOP),
-                    Section.Container(self.data),
-                ]
-            )
-            init_container = Container.Init(
-                deploy_container=expected_code,
-            )
+            init_container = self.data
+            if self.expect_exception is None:
+                if self.data.expected_container_deployed is not None:
+                    expected_code = self.data.expected_container_deployed
+                else:
+                    container_sections = [
+                        s for s in self.data.sections if s.kind == SectionKind.CONTAINER
+                    ]
+                    if len(container_sections) == 0:
+                        raise Exception(
+                            "Unable to determine expected code for EOF test without "
+                            "expected_container_deployed."
+                        )
+                    expected_code = container_sections[0].data
         else:
             init_container = Container.Init(
                 deploy_container=self.data,
             )
-            expected_code = self.data
+            if self.expect_exception is None:
+                expected_code = self.data
 
         gas_limit = self.data.deployment_gas
         if gas_limit is None:
@@ -271,14 +276,18 @@ class EOFTest(BaseTest):
             to=None,
             data=init_container,
         )
-        post = Alloc()
-        if self.expect_exception is not None:
-            post[tx.created_contract] = None  # Expect failure.
-        else:
-            post[tx.created_contract] = Account(
+
+        expected_account: Account | None = (
+            Account(
                 nonce=1,
                 code=expected_code,
             )
+            if expected_code is not None
+            else None
+        )
+        post = Alloc()
+        post[tx.created_contract] = expected_account
+
         return StateTest(
             pre=self.pre,
             tx=tx,
