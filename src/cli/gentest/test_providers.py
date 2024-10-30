@@ -1,5 +1,5 @@
 """
-This module contains various providers which generates context required to create test scripts.
+Contains various providers which generates context required to create test scripts.
 
 Classes:
 - BlockchainTestProvider: The BlockchainTestProvider class takes information about a block,
@@ -9,6 +9,7 @@ needed for testing, such as module docstrings, test names, and pre-state items.
 Example:
     provider = BlockchainTestProvider(block=block, transaction=transaction, state=state)
     context = provider.get_context()
+
 """
 
 from typing import Any, Dict
@@ -21,9 +22,7 @@ from .request_manager import RPCRequest
 
 
 class BlockchainTestProvider(BaseModel):
-    """
-    Provides context required to generate a `blockchain_test` using pytest.
-    """
+    """Provides context required to generate a `blockchain_test` using pytest."""
 
     block: RPCRequest.RemoteBlock
     transaction: RPCRequest.RemoteTransaction
@@ -70,9 +69,7 @@ class BlockchainTestProvider(BaseModel):
 
     # TODO: Output should be dict. Formatting should happen in the template.
     def _get_transaction_items(self) -> str:
-        """
-        Print legacy transaction in .py
-        """
+        """Print legacy transaction in .py."""
         pad = "            "
         tr_str = ""
         quoted_fields_array = ["data", "to"]
@@ -108,6 +105,7 @@ class BlockchainTestProvider(BaseModel):
         Returns:
             Dict[str, Any]: A dictionary containing module docstring, test name,
             test docstring, environment kwargs, pre-state items, and transaction items.
+
         """
         return {
             "environment_kwargs": self._get_environment_kwargs(),

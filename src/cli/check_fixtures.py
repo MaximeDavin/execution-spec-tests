@@ -25,7 +25,6 @@ def count_json_files_exclude_index(start_path: Path) -> int:
 def check_json(json_file_path: Path):
     """
     Check all fixtures in the specified json file:
-
     1. Load the json file into a pydantic model. This checks there are no
         Validation errors when loading fixtures into EEST models.
     2. Serialize the loaded pydantic model to "json" (actually python data
@@ -33,7 +32,7 @@ def check_json(json_file_path: Path):
     3. Load the serialized data back into a pydantic model (to get an updated
         hash) from step 2.
     4. Compare hashes:
-        a. Compare the newly calculated hashes from step 2. and 3.and
+        a. Compare the newly calculated hashes from step 2. and 3. and
         b. If present, compare info["hash"] with the calculated hash from step 2.
     """
     fixtures = Fixtures.from_file(json_file_path, fixture_format=None)
@@ -84,9 +83,7 @@ def check_json(json_file_path: Path):
     help="Stop and raise any exceptions encountered while checking fixtures.",
 )
 def check_fixtures(input_dir: str, quiet_mode: bool, stop_on_error: bool):
-    """
-    Perform some checks on the fixtures contained in the specified directory.
-    """
+    """Perform some checks on the fixtures contained in the specified directory."""
     input_path = Path(input_dir)
     success = True
     file_count = 0
@@ -104,7 +101,6 @@ def check_fixtures(input_dir: str, quiet_mode: bool, stop_on_error: bool):
         expand=True,
         disable=quiet_mode,
     ) as progress:
-
         task_id = progress.add_task("Checking fixtures", total=file_count, filename="...")
         for json_file_path in input_path.rglob("*.json"):
             if json_file_path.name == "index.json":
