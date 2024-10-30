@@ -69,7 +69,8 @@ class OpcodeWithOperands:
             return Bytecode()
 
 
-def process_evm_bytes(evm_bytes: bytes) -> List[OpcodeWithOperands]:  # noqa: D103
+def process_evm_bytes(evm_bytes: bytes) -> List[OpcodeWithOperands]:
+    """Parse a sequence of EVM bytes into a list of opcodes with their operands."""
     evm_bytes = bytearray(evm_bytes)
 
     opcodes: List[OpcodeWithOperands] = []
@@ -114,7 +115,11 @@ def process_evm_bytes(evm_bytes: bytes) -> List[OpcodeWithOperands]:  # noqa: D1
     return opcodes
 
 
-def format_opcodes(opcodes: List[OpcodeWithOperands], assembly: bool = False) -> str:  # noqa: D103
+def format_opcodes(opcodes: List[OpcodeWithOperands], assembly: bool = False) -> str:
+    """
+    Format a list of opcodes into a string, optionally as assembly
+    with empty lines for readability.
+    """
     if assembly:
         opcodes_with_empty_lines: List[OpcodeWithOperands] = []
         for i, op_with_operands in enumerate(opcodes):
@@ -203,7 +208,7 @@ def hex_string(hex_string: str, assembly: bool):
             return
             ```
 
-    """  # noqa: E501
+    """
     processed_output = process_evm_bytes_string(hex_string, assembly=assembly)
     click.echo(processed_output)
 
@@ -222,7 +227,8 @@ def binary_file(binary_file_path, assembly: bool):
 
     Example: Convert the Withdrawal Request contract to assembly
         ```bash
-        uv run evm_bytes binary-file ./src/ethereum_test_forks/forks/contracts/withdrawal_request.bin --assembly
+        uv run evm_bytes \
+        binary-file ./src/ethereum_test_forks/forks/contracts/withdrawal_request.bin --assembly
         ```
 
         Output:
@@ -236,7 +242,7 @@ def binary_file(binary_file_path, assembly: bool):
             ...
             ```
 
-    """  # noqa: E501
+    """
     processed_output = format_opcodes(
         process_evm_bytes(binary_file_path.read()), assembly=assembly
     )
