@@ -281,7 +281,15 @@ class BaseFork(ABC, metaclass=BaseForkMeta):
     @abstractmethod
     def engine_new_payload_requests(cls, block_number: int = 0, timestamp: int = 0) -> bool:
         """
-        Returns true if the engine api version requires new payload calls to include requests.
+        returns true if the engine api version requires new payload calls to include requests.
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def engine_new_payload_target_blob_count(cls, block_number: int = 0, timestamp: int = 0) -> bool:
+        """
+        returns true if the engine api version requires new payload calls to include target blob count.
         """
         pass
 

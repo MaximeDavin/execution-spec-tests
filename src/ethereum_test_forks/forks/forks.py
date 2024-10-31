@@ -961,9 +961,9 @@ class Prague(Cancun):
         return True
 
     @classmethod
-    def engine_new_payload_blob_hashes(cls, block_number: int = 0, timestamp: int = 0) -> bool:
+    def engine_new_payload_target_blob_count(cls, block_number: int = 0, timestamp: int = 0) -> bool:
         """
-        Starting at Prague, new payload directives must contain requests as parameter.
+        Starting at Prague, new payloads include the target blob count as a parameter.
         """
         return True
 
