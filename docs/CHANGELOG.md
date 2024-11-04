@@ -56,6 +56,7 @@ Test fixtures for use by clients are available for each release on the [Github r
 
 - ✨ Fill test fixtures using EELS by default. EEST now uses the [`ethereum-specs-evm-resolver`](https://github.com/petertdavies/ethereum-spec-evm-resolver) with the EELS daemon ([#792](https://github.com/ethereum/execution-spec-tests/pull/792)).
 - 🔀 Move the `evm_transition_tool` package to `ethereum_clis` and derive the transition tool CL interfaces from a shared `EthereumCLI` class that can be reused for other sub-commands ([#894](https://github.com/ethereum/execution-spec-tests/pull/894)).
+- 🔀 Refactor `ethereum_clis` and the `consume direct` interface to use `StateTest` and `Blocktest` classes called via the `FixtureConsumer` helper class ([#935](https://github.com/ethereum/execution-spec-tests/pull/935)).
 
 ### 📋 Misc
 
